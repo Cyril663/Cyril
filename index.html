@@ -2,13 +2,747 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>模拟人脸识别系统</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>生日快乐 - 我的爱人 ❤️</title>
     <style>
+        /* ===== 全局重置 & 基础 ===== */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: "Microsoft Yahei", sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            min-height: 100dvh;
+            font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+            background: #1a0a2e;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ===== 背景层 ===== */
+        .bg-layer {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background: linear-gradient(145deg, #1a0a2e 0%, #2d1b4e 30%, #4a1a5e 60%, #6b2a6b 85%, #8a3a6a 100%);
+            overflow: hidden;
+        }
+
+        /* 动态光晕 */
+        .bg-glow {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.5;
+            animation: glowFloat 12s ease-in-out infinite alternate;
+        }
+        .bg-glow.g1 {
+            width: 60vw;
+            height: 60vw;
+            top: -10%;
+            left: -20%;
+            background: radial-gradient(circle, #f093fb, transparent 70%);
+            animation-delay: 0s;
+        }
+        .bg-glow.g2 {
+            width: 50vw;
+            height: 50vw;
+            bottom: -10%;
+            right: -15%;
+            background: radial-gradient(circle, #f5576c, transparent 70%);
+            animation-delay: -4s;
+        }
+        .bg-glow.g3 {
+            width: 40vw;
+            height: 40vw;
+            top: 40%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: radial-gradient(circle, #ffd700, transparent 70%);
+            opacity: 0.25;
+            animation-delay: -8s;
+            filter: blur(100px);
+        }
+
+        @keyframes glowFloat {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+            33% {
+                transform: translate(5%, -8%) scale(1.1);
+            }
+            66% {
+                transform: translate(-5%, 5%) scale(0.95);
+            }
+            100% {
+                transform: translate(3%, -3%) scale(1.05);
+            }
+        }
+
+        /* ===== 星星 ===== */
+        .stars {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+        .star {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: #fff;
+            border-radius: 50%;
+            animation: twinkle var(--duration, 3s) ease-in-out infinite alternate;
+            opacity: 0.3;
+        }
+        .star.small {
+            width: 2px;
+            height: 2px;
+        }
+        .star.big {
+            width: 5px;
+            height: 5px;
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+        }
+
+        @keyframes twinkle {
+            0% {
+                opacity: 0.2;
+                transform: scale(0.8);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+        }
+
+        /* ===== 漂浮爱心 ===== */
+        .hearts-container {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .floating-heart {
+            position: absolute;
+            font-size: 20px;
+            bottom: -60px;
+            animation: floatUp linear infinite;
+            opacity: 0.7;
+            will-change: transform;
+            transform: translateZ(0);
+        }
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) rotate(0deg) scale(0.6);
+                opacity: 0.2;
+            }
+            20% {
+                opacity: 0.9;
+                transform: translateY(-20vh) rotate(15deg) scale(1);
+            }
+            80% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(-110vh) rotate(-15deg) scale(0.5);
+                opacity: 0;
+            }
+        }
+
+        /* ===== 主卡片 ===== */
+        .card-wrapper {
+            position: relative;
+            z-index: 10;
+            width: 92%;
+            max-width: 420px;
+            padding: 20px 24px 32px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px) saturate(1.4);
+            -webkit-backdrop-filter: blur(20px) saturate(1.4);
+            border-radius: 40px 40px 32px 32px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+            text-align: center;
+            animation: cardIn 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            transform: translateY(40px) scale(0.96);
+            opacity: 0;
+            transition: transform 0.3s ease;
+        }
+
+        @keyframes cardIn {
+            0% {
+                transform: translateY(40px) scale(0.96);
+                opacity: 0;
+            }
+            100% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* ===== 卡片顶部装饰 ===== */
+        .card-top {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 6px;
+            font-size: 22px;
+            letter-spacing: 6px;
+        }
+        .card-top span {
+            animation: sparkle 2s ease-in-out infinite alternate;
+        }
+        .card-top span:nth-child(2) {
+            animation-delay: 0.4s;
+        }
+        .card-top span:nth-child(3) {
+            animation-delay: 0.8s;
+        }
+        .card-top span:nth-child(4) {
+            animation-delay: 1.2s;
+        }
+        .card-top span:nth-child(5) {
+            animation-delay: 1.6s;
+        }
+
+        @keyframes sparkle {
+            0% {
+                opacity: 0.4;
+                transform: scale(0.9);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1.1);
+            }
+        }
+
+        /* ===== 蛋糕图标 ===== */
+        .cake-icon {
+            font-size: 72px;
+            line-height: 1.2;
+            margin: 4px 0 2px;
+            display: block;
+            filter: drop-shadow(0 8px 20px rgba(255, 200, 50, 0.3));
+            animation: cakeBounce 3s ease-in-out infinite;
+        }
+        @keyframes cakeBounce {
+            0%,
+            100% {
+                transform: translateY(0) rotate(-2deg);
+            }
+            50% {
+                transform: translateY(-8px) rotate(2deg);
+            }
+        }
+
+        /* ===== 标题 ===== */
+        .main-title {
+            font-size: clamp(34px, 10vw, 52px);
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffd700 0%, #ffb347 40%, #ff6b6b 80%, #ffd700 100%);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: goldShine 4s ease-in-out infinite alternate;
+            letter-spacing: 2px;
+            line-height: 1.2;
+            margin: 2px 0 4px;
+            text-shadow: none;
+            filter: drop-shadow(0 4px 20px rgba(255, 200, 50, 0.15));
+        }
+        @keyframes goldShine {
+            0% {
+                background-position: 0% 50%;
+            }
+            100% {
+                background-position: 100% 50%;
+            }
+        }
+
+        /* ===== 农历日期 ===== */
+        .lunar-date {
+            display: inline-block;
+            margin: 4px auto 10px;
+            padding: 6px 22px;
+            background: rgba(255, 215, 0, 0.15);
+            border: 1px solid rgba(255, 215, 0, 0.25);
+            border-radius: 40px;
+            font-size: clamp(16px, 4.5vw, 22px);
+            color: #ffd700;
+            font-weight: 600;
+            letter-spacing: 3px;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 4px 24px rgba(255, 215, 0, 0.08);
+        }
+        .lunar-date .icon {
+            margin-right: 6px;
+        }
+
+        /* ===== 分割线 ===== */
+        .divider {
+            width: 60px;
+            height: 3px;
+            margin: 12px auto 14px;
+            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.6), transparent);
+            border-radius: 4px;
+        }
+
+        /* ===== 祝福语 ===== */
+        .message {
+            font-size: clamp(15px, 4vw, 19px);
+            line-height: 1.9;
+            color: rgba(255, 255, 255, 0.92);
+            text-align: left;
+            padding: 0 4px;
+            letter-spacing: 0.5px;
+            font-weight: 400;
+            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+        }
+        .message .highlight {
+            color: #ffd700;
+            font-weight: 600;
+        }
+        .message .greeting {
+            display: block;
+            font-size: clamp(18px, 5vw, 24px);
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+            text-align: center;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #ffd700, #ff8a8a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .message .signature {
+            display: block;
+            text-align: right;
+            margin-top: 16px;
+            font-size: clamp(14px, 3.8vw, 18px);
+            color: rgba(255, 215, 0, 0.8);
+            font-weight: 500;
+            letter-spacing: 1px;
+            font-style: italic;
+        }
+        .message .signature .heart {
+            color: #ff6b8a;
+            display: inline-block;
+            animation: heartbeat 1.4s ease-in-out infinite;
+        }
+        @keyframes heartbeat {
+            0%,
+            100% {
+                transform: scale(1);
+            }
+            14% {
+                transform: scale(1.25);
+            }
+            28% {
+                transform: scale(1);
+            }
+            42% {
+                transform: scale(1.2);
+            }
+            56% {
+                transform: scale(1);
+            }
+        }
+
+        /* ===== 底部爱心 ===== */
+        .footer-hearts {
+            margin-top: 18px;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.3);
+            letter-spacing: 4px;
+        }
+        .footer-hearts .love {
+            color: #ff6b8a;
+            animation: heartbeat 1.6s ease-in-out infinite;
+            display: inline-block;
+        }
+        .footer-hearts .love:nth-child(2) {
+            animation-delay: 0.3s;
+        }
+        .footer-hearts .love:nth-child(3) {
+            animation-delay: 0.6s;
+        }
+        .footer-hearts .love:nth-child(4) {
+            animation-delay: 0.9s;
+        }
+        .footer-hearts .love:nth-child(5) {
+            animation-delay: 1.2s;
+        }
+
+        /* ===== 点击提示 ===== */
+        .tap-hint {
+            position: fixed;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            color: rgba(255, 255, 255, 0.25);
+            font-size: 13px;
+            letter-spacing: 2px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px 24px;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(8px);
+            animation: pulseHint 3s ease-in-out infinite;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        @keyframes pulseHint {
+            0%,
+            100% {
+                opacity: 0.25;
+                transform: translateX(-50%) scale(1);
+            }
+            50% {
+                opacity: 0.6;
+                transform: translateX(-50%) scale(1.03);
+            }
+        }
+
+        /* ===== 点击产生的心形（burst） ===== */
+        .burst-heart {
+            position: fixed;
+            pointer-events: none;
+            z-index: 100;
+            font-size: 28px;
+            animation: burstOut 1s cubic-bezier(0, 0.6, 0.4, 1) forwards;
+            will-change: transform, opacity;
+        }
+        @keyframes burstOut {
+            0% {
+                transform: translate(0, 0) scale(0.3) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--tx, 0), var(--ty, -120px)) scale(1.4) rotate(var(--rot, 40deg));
+                opacity: 0;
+            }
+        }
+
+        /* ===== 响应式微调 ===== */
+        @media (max-width: 420px) {
+            .card-wrapper {
+                padding: 16px 18px 24px;
+                border-radius: 32px;
+            }
+            .cake-icon {
+                font-size: 56px;
+            }
+            .message {
+                font-size: 15px;
+                line-height: 1.85;
+            }
+            .lunar-date {
+                font-size: 15px;
+                padding: 4px 16px;
+            }
+            .footer-hearts {
+                font-size: 15px;
+                gap: 8px;
+            }
+            .tap-hint {
+                font-size: 11px;
+                padding: 6px 18px;
+                bottom: 18px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .card-wrapper {
+                padding: 12px 14px 18px;
+                border-radius: 28px;
+            }
+            .cake-icon {
+                font-size: 44px;
+            }
+            .main-title {
+                font-size: 28px;
+            }
+            .message {
+                font-size: 13px;
+                line-height: 1.8;
+            }
+        }
+
+        /* 横屏提示（仅针对手机横屏做简单适配） */
+        @media (orientation: landscape) and (max-height: 500px) {
+            .card-wrapper {
+                max-width: 360px;
+                padding: 12px 20px 18px;
+                border-radius: 28px;
+            }
+            .cake-icon {
+                font-size: 40px;
+            }
+            .main-title {
+                font-size: 28px;
+            }
+            .message {
+                font-size: 13px;
+                line-height: 1.7;
+            }
+            .lunar-date {
+                font-size: 13px;
+                padding: 3px 14px;
+                margin: 2px auto 6px;
+            }
+            .footer-hearts {
+                margin-top: 10px;
+                font-size: 13px;
+            }
+            .tap-hint {
+                display: none;
+            }
+            .divider {
+                margin: 6px auto 8px;
+            }
+        }
+
+        /* ===== 安全区域适配 ===== */
+        @supports (padding: max(0px)) {
+            .card-wrapper {
+                padding-left: max(24px, env(safe-area-inset-left));
+                padding-right: max(24px, env(safe-area-inset-right));
+            }
+            .tap-hint {
+                bottom: max(28px, env(safe-area-inset-bottom));
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== 背景 ===== -->
+    <div class="bg-layer" aria-hidden="true">
+        <div class="bg-glow g1"></div>
+        <div class="bg-glow g2"></div>
+        <div class="bg-glow g3"></div>
+        <div class="stars" id="stars"></div>
+    </div>
+
+    <!-- ===== 漂浮爱心 ===== -->
+    <div class="hearts-container" id="heartsContainer" aria-hidden="true"></div>
+
+    <!-- ===== 主卡片 ===== -->
+    <div class="card-wrapper" role="main" aria-label="生日祝福卡片">
+        <!-- 顶部装饰 -->
+        <div class="card-top" aria-hidden="true">
+            <span>✨</span>
+            <span>🌟</span>
+            <span>✨</span>
+            <span>🌟</span>
+            <span>✨</span>
+        </div>
+
+        <!-- 蛋糕 -->
+        <span class="cake-icon" aria-hidden="true">🎂</span>
+
+        <!-- 标题 -->
+        <h1 class="main-title">生日快乐</h1>
+
+        <!-- 农历日期 -->
+        <div class="lunar-date">
+            <span class="icon">🎋</span> 农历 · 七月十三
+        </div>
+
+        <!-- 分割线 -->
+        <div class="divider" aria-hidden="true"></div>
+
+        <!-- 祝福语 -->
+        <div class="message">
+            <span class="greeting">💕 亲爱的小敏同学 💕</span>
+            亲爱的，今天是你的<span class="highlight">农历生日</span>——<span class="highlight">七月十三</span>。
+            在这个只属于你的特别日子里，我想把全世界最温柔的光都聚拢来，照亮你。
+            <br><br>
+            遇见你，是我生命里最动人的偶然；爱上你，是我做过最笃定的决定。
+            你的笑是我每天的日出，你的声音是我最安心的归处。
+            <br><br>
+            愿我们的爱，像这漫天的星辰，永远清澈、永远滚烫。
+            愿你的每一天，都被这世界温柔以待。
+            <br><br>
+            <span class="signature">
+                —— 永远爱你的 <span class="heart">❤️</span> 男朋友
+            </span>
+        </div>
+
+        <!-- 底部爱心 -->
+        <div class="footer-hearts" aria-hidden="true">
+            <span class="love">♥</span>
+            <span class="love">♥</span>
+            <span class="love">♥</span>
+            <span class="love">♥</span>
+            <span class="love">♥</span>
+        </div>
+    </div>
+
+    <!-- ===== 点击提示 ===== -->
+    <div class="tap-hint" aria-hidden="true">✨ 轻触屏幕 · 爱意绽放 ✨</div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ========================================
+            // 1. 生成星星
+            // ========================================
+            const starsContainer = document.getElementById('stars');
+            const STAR_COUNT = 80;
+
+            for (let i = 0; i < STAR_COUNT; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                const size = Math.random();
+                if (size < 0.3) star.classList.add('small');
+                else if (size > 0.85) star.classList.add('big');
+
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.setProperty('--duration', (2 + Math.random() * 4) + 's');
+                star.style.animationDelay = (Math.random() * 6) + 's';
+                star.style.width = (2 + Math.random() * 4) + 'px';
+                star.style.height = star.style.width;
+                starsContainer.appendChild(star);
+            }
+
+            // ========================================
+            // 2. 漂浮爱心
+            // ========================================
+            const heartsContainer = document.getElementById('heartsContainer');
+            const HEART_EMOJIS = ['❤️', '💕', '💗', '💖', '✨', '🌸', '🌺', '💝'];
+            const MAX_HEARTS = 18;
+            let heartCount = 0;
+
+            function createFloatingHeart() {
+                if (heartCount >= MAX_HEARTS) return;
+
+                const el = document.createElement('div');
+                el.className = 'floating-heart';
+                el.textContent = HEART_EMOJIS[Math.floor(Math.random() * HEART_EMOJIS.length)];
+                const size = 16 + Math.random() * 26;
+                el.style.fontSize = size + 'px';
+                el.style.left = (5 + Math.random() * 90) + '%';
+                el.style.animationDuration = (12 + Math.random() * 18) + 's';
+                el.style.animationDelay = (Math.random() * 4) + 's';
+                el.style.opacity = 0.3 + Math.random() * 0.5;
+
+                heartsContainer.appendChild(el);
+                heartCount++;
+
+                // 移除后计数减1
+                el.addEventListener('animationend', function() {
+                    el.remove();
+                    heartCount--;
+                });
+            }
+
+            // 初始生成一批
+            for (let i = 0; i < 10; i++) {
+                setTimeout(createFloatingHeart, i * 400);
+            }
+
+            // 持续补充
+            setInterval(() => {
+                if (heartCount < MAX_HEARTS - 3) {
+                    createFloatingHeart();
+                }
+            }, 2000);
+
+            // ========================================
+            // 3. 点击/触摸产生爱心爆裂
+            // ========================================
+            const BURST_COUNT = 10;
+
+            function burstHearts(x, y) {
+                const colors = ['#ff6b8a', '#ffd700', '#ff8a8a', '#ffb347', '#f093fb', '#ff6b6b', '#ff9a9e'];
+                for (let i = 0; i < BURST_COUNT; i++) {
+                    const el = document.createElement('div');
+                    el.className = 'burst-heart';
+                    el.textContent = ['❤️', '💕', '💗', '💖', '✨', '🌸'][Math.floor(Math.random() * 6)];
+                    const angle = (Math.PI * 2 * i) / BURST_COUNT + (Math.random() - 0.5) * 0.8;
+                    const distance = 60 + Math.random() * 100;
+                    const tx = Math.cos(angle) * distance;
+                    const ty = Math.sin(angle) * distance - 40;
+                    const rot = (Math.random() - 0.5) * 120;
+
+                    el.style.left = x + 'px';
+                    el.style.top = y + 'px';
+                    el.style.setProperty('--tx', tx + 'px');
+                    el.style.setProperty('--ty', ty + 'px');
+                    el.style.setProperty('--rot', rot + 'deg');
+                    el.style.fontSize = (18 + Math.random() * 24) + 'px';
+                    el.style.color = colors[Math.floor(Math.random() * colors.length)];
+
+                    document.body.appendChild(el);
+
+                    el.addEventListener('animationend', function() {
+                        el.remove();
+                    });
+                }
+            }
+
+            // 监听点击/触摸
+            function handleTap(e) {
+                let clientX, clientY;
+                if (e.touches) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                    e.preventDefault();
+                } else {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
+                }
+                burstHearts(clientX, clientY);
+
+                // 震动反馈（如果支持）
+                if (navigator.vibrate) {
+                    navigator.vibrate(10);
+                }
+            }
+
+            document.addEventListener('click', handleTap);
+            document.addEventListener('touchstart', handleTap, { passive: false });
+
+            // ========================================
+            // 4. 窗口 resize 保持星星数量合理
+            // ========================================
+            // （无需额外操作，星星是百分比定位）
+
+            // ========================================
+            // 5. 加载完成后微调
+            // ========================================
+            window.addEventListener('load', function() {
+                // 卡片入场动画已经由 CSS 处理
+                // 稍后再生成一些爱心
+                setTimeout(() => {
+                    for (let i = 0; i < 4; i++) {
+                        setTimeout(createFloatingHeart, i * 300);
+                    }
+                }, 1000);
+            });
+
+            console.log('🎂 生日快乐！愿你永远被爱包围 ❤️');
+        })();
+    </script>
+
+</body>
+</html>
     
   
